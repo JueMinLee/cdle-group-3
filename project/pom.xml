@@ -12,43 +12,94 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <dl4j.version>1.0.0-beta7</dl4j.version>
-        <nd4j.version>1.0.0-beta7</nd4j.version>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+
+        <nd4j.backend>nd4j-native-platform</nd4j.backend>
+        <!-- Change the dl4j.cuda.backend property to deeplearning4j-cuda-*.*-platform example: deeplearning4j-cuda-10.0 to use CuDNN -->
+        <dl4j.cuda.backend>deeplearning4j-cuda-10.0</dl4j.cuda.backend>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <shadedClassifier>bin</shadedClassifier>
+
         <java.version>1.8</java.version>
+        <nd4j.version>1.0.0-beta6</nd4j.version>
+        <dl4j.version>1.0.0-beta6</dl4j.version>
+        <datavec.version>1.0.0-beta6</datavec.version>
+
+        <javacv.version>1.5.2</javacv.version>
+        <zip4j.version>2.2.6</zip4j.version>
         <slf4j.version>2.0.0-alpha1</slf4j.version>
+        <httpclient.version>4.5.12</httpclient.version>
+
+        <maven-compiler-plugin.version>3.6.1</maven-compiler-plugin.version>
         <maven-shade-plugin.version>2.4.3</maven-shade-plugin.version>
+        <exec-maven-plugin.version>1.4.0</exec-maven-plugin.version>
+        <maven.minimum.version>3.3.1</maven.minimum.version>
+        <javafx.version>2.2.3</javafx.version>
     </properties>
 
+
     <dependencies>
-        <!-- nd4j backend-->
+        <!-- ND4J backend. You need one in every DL4J project. Normally define artifactId as either "nd4j-native-platform" or "nd4j-cuda-9.2-platform" -->
         <dependency>
             <groupId>org.nd4j</groupId>
-            <artifactId>nd4j-native-platform</artifactId>
+            <artifactId>${nd4j.backend}</artifactId>
             <version>${nd4j.version}</version>
         </dependency>
 
-        <!-- altenatively, use GPU /CUDA for training -->
-        <!-- to use this, disable nd4j-native-platform and use this -->
-        <!-- <dependency> -->
-        <!--   <groupId>org.nd4j</groupId> -->
-        <!--   <artifactId>nd4j-cuda-10.2-platform</artifactId> -->
-        <!--   <version>${nd4j.version}</version> -->
-        <!-- </dependency> -->
+        <!--Uncomment to enable cudnn-->
+        <!--<dependency>
+            <groupId>org.deeplearning4j</groupId>
+            <artifactId>${dl4j.cuda.backend}</artifactId>
+            <version>${dl4j.version}</version>
+        </dependency>-->
 
-        <!--futher more enable cudnn when training using gpu -->
-        <!-- <dependency> -->
-        <!--   <groupId>org.deeplearning4j</groupId> -->
-        <!--   <artifactId>deeplearning4j-cuda-10.2</artifactId> -->
-        <!--   <version>${dl4j.version}</version> -->
-        <!-- </dependency> -->
+        <dependency>
+            <groupId>org.deeplearning4j</groupId>
+            <artifactId>deeplearning4j-zoo</artifactId>
+            <version>${dl4j.version}</version>
+        </dependency>
 
-        <!-- deeplearning4j-core: contains main functionality and neural networks -->
+        <!-- https://mvnrepository.com/artifact/org.deeplearning4j/deeplearning4j-nn -->
+        <dependency>
+            <groupId>org.deeplearning4j</groupId>
+            <artifactId>deeplearning4j-nn</artifactId>
+            <version>${dl4j.version}</version>
+        </dependency>
+
+        <!-- deeplearning4j-ui is used for visualization: see http://deeplearning4j.org/visualization -->
+        <dependency>
+            <groupId>org.deeplearning4j</groupId>
+            <artifactId>deeplearning4j-ui</artifactId>
+            <version>${dl4j.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>org.deeplearning4j</groupId>
             <artifactId>deeplearning4j-core</artifactId>
             <version>${dl4j.version}</version>
         </dependency>
 
+        <!-- Used for downloading data in some of the examples -->
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>${httpclient.version}</version>
+        </dependency>
+
+        <!--Used for Unzipping files in some of the examples-->
+        <dependency>
+            <groupId>net.lingala.zip4j</groupId>
+            <artifactId>zip4j</artifactId>
+            <version>${zip4j.version}</version>
+        </dependency>
+
+        <!-- For running opencv and ffmpeg libraries -->
+        <dependency>
+            <groupId>org.bytedeco</groupId>
+            <artifactId>javacv</artifactId>
+            <version>${javacv.version}</version>
+        </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->
         <dependency>
@@ -77,6 +128,7 @@
                     <target>${java.version}</target>
                 </configuration>
             </plugin>
+
 
 
             <!--
