@@ -30,7 +30,7 @@ public class DrawingIterator {
     private static final int seed = 123;
     private static Random rng = new Random(seed);
     private static String dataDir;
-    private static String downloadLink;
+    //private static String downloadLink;
     private static Path trainDir, testDir;
     private static InputSplit trainData, testData;
     private static final int nChannels = 3;
@@ -79,6 +79,8 @@ public class DrawingIterator {
 
         File parentDir = new File(Paths.get(dataDir,"drawings").toString());
 
+        trainDir = Paths.get(dataDir, "drawings");
+        testDir = Paths.get(dataDir, "drawings");
 
         //Files in directories under the parent dir that have "allowed extensions" split needs a random number generator for reproducibility when splitting the files into train and test
         FileSplit filesInDir = new FileSplit(parentDir, allowedExtensions, rng);

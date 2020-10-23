@@ -70,9 +70,9 @@ public class MyProject {
     private static int batchSize = 2;
     private static int nEpochs = 40;
     private static double learningRate = 1e-4;
-    private static int nClasses = 2;
+    private static int nClasses = 3;
     private static List<String> labels;
-    private static int trainperc = 70;
+    private static int trainperc = 80;
     private static final Random randNumGen = new Random(seed);
 
     private static File modelFilename = new File(System.getProperty("user.dir"), "generated-models/DrawingClassification_tinyyolo.zip");
@@ -94,14 +94,14 @@ public class MyProject {
         List<Pair<ImageTransform,Double>> pipeline = Arrays.asList(
                 new Pair<>(horizontalFlip,0.5),
                 new Pair<>(rotateImage, 0.5),
-                new Pair<>(cropImage,0.3)
-//                ,new Pair<>(showImage,1.0) //uncomment this to show transform image
+                new Pair<>(cropImage,0.3),
+                new Pair<>(showImage,1.0) //uncomment this to show transform image
         );
 
         ImageTransform transform = new PipelineImageTransform(pipeline,shuffle);
 
         //        STEP 1 : Create iterators
-        DrawingIterator.setup(batchSize,trainperc);
+        DrawingIterator.setup(batchSize, trainperc);
         RecordReaderDataSetIterator trainIter = DrawingIterator.trainIterator(batchSize);
         RecordReaderDataSetIterator testIter = DrawingIterator.testIterator(1);
         labels = trainIter.getLabels();
