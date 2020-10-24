@@ -31,13 +31,14 @@ import org.deeplearning4j.ui.stats.StatsListener;
 import org.deeplearning4j.ui.storage.InMemoryStatsStorage;
 import org.deeplearning4j.util.ModelSerializer;
 import org.deeplearning4j.zoo.model.TinyYOLO;
+import org.nd4j.common.primitives.Pair;
 import org.nd4j.linalg.activations.Activation;
 import org.nd4j.linalg.api.buffer.DataType;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.api.preprocessor.ImagePreProcessingScaler;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.learning.config.Adam;
-import org.nd4j.linalg.primitives.Pair;
+//import org.nd4j.linalg.primitives.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -101,7 +102,7 @@ public class MyProject {
         ImageTransform transform = new PipelineImageTransform(pipeline,shuffle);
 
         //        STEP 1 : Create iterators
-        DrawingIterator.setup(batchSize, trainperc);
+        DrawingIterator.setup(batchSize, trainperc, transform);
         RecordReaderDataSetIterator trainIter = DrawingIterator.trainIterator(batchSize);
         RecordReaderDataSetIterator testIter = DrawingIterator.testIterator(1);
         labels = trainIter.getLabels();

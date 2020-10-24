@@ -13,6 +13,7 @@ import org.datavec.image.recordreader.objdetect.impl.VocLabelProvider;
 import org.datavec.image.transform.ImageTransform;
 import org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator;
 import org.nd4j.linalg.dataset.api.preprocessor.ImagePreProcessingScaler;
+import org.nd4j.linalg.io.ClassPathResource;
 import org.nd4j.util.ArchiveUtils;
 import org.slf4j.Logger;
 
@@ -72,15 +73,15 @@ public class DrawingIterator {
     }
 
     public static void setup(int batchSizeArg, int trainPerc) throws IOException {
-        dataDir = Paths.get(
-                System.getProperty("user.home"),
-                Helper.getPropValues("dl4j_home.data")
-        ).toString();
+        /*dataDir = Paths.get(
+                System.getProperty("user.home")
+                //Helper.getPropValues("dl4j_home.data")
+        ).toString();*/
 
-        File parentDir = new File(Paths.get(dataDir,"drawings").toString());
+        File parentDir = new ClassPathResource("drawings").getFile();
 
-        trainDir = Paths.get(dataDir, "drawings");
-        testDir = Paths.get(dataDir, "drawings");
+        trainDir = Paths.get(System.getProperty("user.home"),"cdle-group-3/project/src/main/resources");
+        testDir = Paths.get(System.getProperty("user.home"), "cdle-group-3/project/src/main/resources");
 
         //Files in directories under the parent dir that have "allowed extensions" split needs a random number generator for reproducibility when splitting the files into train and test
         FileSplit filesInDir = new FileSplit(parentDir, allowedExtensions, rng);
