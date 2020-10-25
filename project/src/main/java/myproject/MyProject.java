@@ -1,4 +1,4 @@
-package myproject;//package MyProject.MyProject;
+package myproject;
 
 import org.bytedeco.javacv.CanvasFrame;
 import org.bytedeco.javacv.Frame;
@@ -25,28 +25,28 @@ import org.deeplearning4j.nn.layers.objdetect.YoloUtils;
 import org.deeplearning4j.nn.transferlearning.FineTuneConfiguration;
 import org.deeplearning4j.nn.transferlearning.TransferLearning;
 import org.deeplearning4j.nn.weights.WeightInit;
+import org.deeplearning4j.optimize.api.InvocationType;
+import org.deeplearning4j.optimize.listeners.EvaluativeListener;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
 import org.deeplearning4j.ui.api.UIServer;
 import org.deeplearning4j.ui.stats.StatsListener;
+import org.deeplearning4j.ui.storage.FileStatsStorage;
 import org.deeplearning4j.ui.storage.InMemoryStatsStorage;
 import org.deeplearning4j.util.ModelSerializer;
 import org.deeplearning4j.zoo.model.TinyYOLO;
-import org.nd4j.common.primitives.Pair;
 import org.nd4j.linalg.activations.Activation;
 import org.nd4j.linalg.api.buffer.DataType;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.api.preprocessor.ImagePreProcessingScaler;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.learning.config.Adam;
-//import org.nd4j.linalg.primitives.Pair;
+import org.nd4j.linalg.primitives.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.event.KeyEvent;
 import java.io.File;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 import static org.bytedeco.opencv.global.opencv_core.CV_8U;
 import static org.bytedeco.opencv.global.opencv_core.flip;
@@ -62,11 +62,11 @@ import static org.bytedeco.opencv.helper.opencv_core.RGB;
 public class MyProject {
     private static final Logger log = LoggerFactory.getLogger(MyProject.class);
     private static int seed = 123;
-    private static double detectionThreshold = 0.5;
+    private static double detectionThreshold = 0.3;
     private static int nBoxes = 5;
     private static double lambdaNoObj = 0.5;
     private static double lambdaCoord = 5.0;
-    private static double[][] priorBoxes = {{1, 3}, {2.5, 6}, {3, 4}, {3.5, 8}, {4, 9}};
+    private static double[][] priorBoxes = {{1, 3}, {2.5, 6}, {3, 4}, {3.5, 8}, {4, 9}};;
 
     private static int batchSize = 2;
     private static int nEpochs = 40;
@@ -95,19 +95,18 @@ public class MyProject {
         List<Pair<ImageTransform,Double>> pipeline = Arrays.asList(
                 new Pair<>(horizontalFlip,0.5),
                 new Pair<>(rotateImage, 0.5),
-                new Pair<>(cropImage,0.3),
-                new Pair<>(showImage,1.0) //uncomment this to show transform image
+                new Pair<>(cropImage,0.3)
+               // new Pair<>(showImage,1.0) //uncomment this to show transform image
         );
 
         ImageTransform transform = new PipelineImageTransform(pipeline,shuffle);
 
         //        STEP 1 : Create iterators
-        DrawingIterator.setup(batchSize, trainperc, transform);
+        DrawingIterator.setup(batchSize, 80, transform);
         RecordReaderDataSetIterator trainIter = DrawingIterator.trainIterator(batchSize);
         RecordReaderDataSetIterator testIter = DrawingIterator.testIterator(1);
         labels = trainIter.getLabels();
 
-        //        If model does not exist, train the model, else directly go to model evaluation and then run real time object detection inference.
         if (modelFilename.exists()) {
             //        STEP 2 : Load trained model from previous execution
             Nd4j.getRandom().setSeed(seed);
@@ -117,14 +116,10 @@ public class MyProject {
             Nd4j.getRandom().setSeed(seed);
             INDArray priors = Nd4j.create(priorBoxes);
             //     STEP 2 : Train the model using Transfer Learning
-            //     STEP 2.1: Transfer Learning steps - Load TinyYOLO prebuilt model.
             log.info("Build model...");
             ComputationGraph pretrained = (ComputationGraph) TinyYOLO.builder().build().initPretrained();
-
-            //     STEP 2.2: Transfer Learning steps - Model Configurations.
             FineTuneConfiguration fineTuneConf = getFineTuneConfiguration();
 
-            //     STEP 2.3: Transfer Learning steps - Modify prebuilt model's architecture
             model = getComputationGraph(pretrained, priors, fineTuneConf);
             System.out.println(model.summary(InputType.convolutional(
                     DrawingIterator.yoloheight,
@@ -133,10 +128,10 @@ public class MyProject {
 
             //     STEP 2.4: Training and Save model.
             log.info("Train model...");
-            UIServer server = UIServer.getInstance();
-            StatsStorage storage = new InMemoryStatsStorage();
-            server.attach(storage);
-            model.setListeners(new ScoreIterationListener(1), new StatsListener(storage));
+            UIServer uiServer = UIServer.getInstance();
+            StatsStorage storage = new FileStatsStorage(new File(System.getProperty("java.io.tmpdir"), "ui-stats.dl4j"));
+            uiServer.attach(storage);
+            model.setListeners(new ScoreIterationListener(10), new StatsListener(storage));
 
             for (int i = 1; i < nEpochs + 1; i++) {
                 trainIter.reset();
@@ -158,9 +153,10 @@ public class MyProject {
 
         return new TransferLearning.GraphBuilder(pretrained)
                 .fineTuneConfiguration(fineTuneConf)
-                .removeVertexKeepConnections("conv2d_23")
+                .setFeatureExtractor("leaky_re_lu_8")
+                .removeVertexKeepConnections("conv2d_9")
                 .removeVertexKeepConnections("outputs")
-                .addLayer("conv2d_23",
+                .addLayer("conv2d_9",
                         new ConvolutionLayer.Builder(1, 1)
                                 .nIn(1024)
                                 .nOut(nBoxes * (5 + nClasses))
@@ -169,14 +165,14 @@ public class MyProject {
                                 .weightInit(WeightInit.XAVIER)
                                 .activation(Activation.IDENTITY)
                                 .build(),
-                        "leaky_re_lu_22")
+                        "leaky_re_lu_8")
                 .addLayer("outputs",
                         new Yolo2OutputLayer.Builder()
                                 .lambdaNoObj(lambdaNoObj)
                                 .lambdaCoord(lambdaCoord)
                                 .boundingBoxPriors(priors.castTo(DataType.FLOAT))
                                 .build(),
-                        "conv2d_23")
+                        "conv2d_9")
                 .setOutputs("outputs")
                 .build();
     }
@@ -195,6 +191,7 @@ public class MyProject {
                 .inferenceWorkspaceMode(WorkspaceMode.ENABLED)
                 .build();
     }
+
 
     //    Evaluate visually the performance of the trained object detection model
     private static void OfflineValidationWithTestDataset(RecordReaderDataSetIterator test) throws InterruptedException {
