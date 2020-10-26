@@ -25,12 +25,9 @@ import org.deeplearning4j.nn.layers.objdetect.YoloUtils;
 import org.deeplearning4j.nn.transferlearning.FineTuneConfiguration;
 import org.deeplearning4j.nn.transferlearning.TransferLearning;
 import org.deeplearning4j.nn.weights.WeightInit;
-import org.deeplearning4j.optimize.api.InvocationType;
-import org.deeplearning4j.optimize.listeners.EvaluativeListener;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
 import org.deeplearning4j.ui.api.UIServer;
 import org.deeplearning4j.ui.stats.StatsListener;
-import org.deeplearning4j.ui.storage.FileStatsStorage;
 import org.deeplearning4j.ui.storage.InMemoryStatsStorage;
 import org.deeplearning4j.util.ModelSerializer;
 import org.deeplearning4j.zoo.model.TinyYOLO;
@@ -46,7 +43,9 @@ import org.slf4j.LoggerFactory;
 
 import java.awt.event.KeyEvent;
 import java.io.File;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
 
 import static org.bytedeco.opencv.global.opencv_core.CV_8U;
 import static org.bytedeco.opencv.global.opencv_core.flip;
@@ -62,14 +61,15 @@ import static org.bytedeco.opencv.helper.opencv_core.RGB;
 public class MyProject {
     private static final Logger log = LoggerFactory.getLogger(MyProject.class);
     private static int seed = 123;
-    private static double detectionThreshold = 0.3;
+    private static double detectionThreshold = 0.2;
     private static int nBoxes = 5;
     private static double lambdaNoObj = 0.5;
     private static double lambdaCoord = 5.0;
-    private static double[][] priorBoxes = {{1, 3}, {2.5, 6}, {3, 4}, {3.5, 8}, {4, 9}};;
+    private static double[][] priorBoxes = {{1, 3}, {2.5, 6}, {3, 4}, {3.5, 8}, {4, 9}};
+    ;
 
     private static int batchSize = 2;
-    private static int nEpochs = 40;
+    private static int nEpochs = 300;
     private static double learningRate = 1e-4;
     private static int nClasses = 3;
     private static List<String> labels;
@@ -83,23 +83,23 @@ public class MyProject {
     private static final Scalar YELLOW = RGB(255, 255, 0);
     private static Scalar[] colormap = {GREEN, YELLOW};
     private static String labeltext = null;
-
+    private static int inputSize = 416;
 
     public static void main(String[] args) throws Exception {
 
         ImageTransform horizontalFlip = new FlipImageTransform(1);
         ImageTransform cropImage = new CropImageTransform(25);
         ImageTransform rotateImage = new RotateImageTransform(randNumGen, 15);
-        ImageTransform showImage = new ShowImageTransform("Image",1000);
+        ImageTransform showImage = new ShowImageTransform("Image", 1000);
         boolean shuffle = false;
-        List<Pair<ImageTransform,Double>> pipeline = Arrays.asList(
-                new Pair<>(horizontalFlip,0.5),
+        List<Pair<ImageTransform, Double>> pipeline = Arrays.asList(
+                new Pair<>(horizontalFlip, 0.5),
                 new Pair<>(rotateImage, 0.5),
-                new Pair<>(cropImage,0.3)
-               // new Pair<>(showImage,1.0) //uncomment this to show transform image
+                new Pair<>(cropImage, 0.3)
+                // new Pair<>(showImage,1.0) //uncomment this to show transform image
         );
 
-        ImageTransform transform = new PipelineImageTransform(pipeline,shuffle);
+        ImageTransform transform = new PipelineImageTransform(pipeline, shuffle);
 
         //        STEP 1 : Create iterators
         DrawingIterator.setup(batchSize, 80, transform);
@@ -128,10 +128,10 @@ public class MyProject {
 
             //     STEP 2.4: Training and Save model.
             log.info("Train model...");
-            UIServer uiServer = UIServer.getInstance();
-            StatsStorage storage = new FileStatsStorage(new File(System.getProperty("java.io.tmpdir"), "ui-stats.dl4j"));
-            uiServer.attach(storage);
-            model.setListeners(new ScoreIterationListener(10), new StatsListener(storage));
+            UIServer server = UIServer.getInstance();
+            StatsStorage storage = new InMemoryStatsStorage();
+            server.attach(storage);
+            model.setListeners(new ScoreIterationListener(1), new StatsListener(storage));
 
             for (int i = 1; i < nEpochs + 1; i++) {
                 trainIter.reset();
@@ -144,7 +144,7 @@ public class MyProject {
             System.out.println("Model saved.");
         }
         //     STEP 3: Evaluate the model's accuracy by using the test iterator.
-        OfflineValidationWithTestDataset(testIter);
+        //OfflineValidationWithTestDataset(testIter);
         //     STEP 4: Inference the model and process the webcam stream and make predictions.
         doInference();
     }
@@ -153,7 +153,7 @@ public class MyProject {
 
         return new TransferLearning.GraphBuilder(pretrained)
                 .fineTuneConfiguration(fineTuneConf)
-                .setFeatureExtractor("leaky_re_lu_8")
+                .setFeatureExtractor("leaky_re_lu_7")
                 .removeVertexKeepConnections("conv2d_9")
                 .removeVertexKeepConnections("outputs")
                 .addLayer("conv2d_9",
@@ -223,7 +223,7 @@ public class MyProject {
     // Stream video frames from Webcam and run them through TinyYOLO model and get predictions
     private static void doInference() {
 
-        String cameraPos = "front";
+        String cameraPos = "back";
         int cameraNum = 0;
         Thread thread = null;
         NativeImageLoader loader = new NativeImageLoader(
@@ -315,25 +315,24 @@ public class MyProject {
     }
 
     private static Mat drawResults(List<DetectedObject> objects, Mat mat, int w, int h) {
-        for (DetectedObject obj : objects) {
-            double[] xy1 = obj.getTopLeftXY();
-            double[] xy2 = obj.getBottomRightXY();
-            String label = labels.get(obj.getPredictedClass());
-            int x1 = (int) Math.round(w * xy1[0] / DrawingIterator.gridWidth);
-            int y1 = (int) Math.round(h * xy1[1] / DrawingIterator.gridHeight);
-            int x2 = (int) Math.round(w * xy2[0] / DrawingIterator.gridWidth);
-            int y2 = (int) Math.round(h * xy2[1] / DrawingIterator.gridHeight);
+
+        for (DetectedObject i : objects) {
+            double[] xy1 = i.getTopLeftXY();
+            double[] xy2 = i.getBottomRightXY();
+            String label = labels.get(i.getPredictedClass());
+            int x1 = (int) Math.round(w * xy1[0] / 13);
+            int y1 = (int) Math.round(h * xy1[1] / 13);
+            int x2 = (int) Math.round(w * xy2[0] / 13);
+            int y2 = (int) Math.round(h * xy2[1] / 13);
             //Draw bounding box
-            rectangle(mat, new Point(x1, y1), new Point(x2, y2), colormap[obj.getPredictedClass()], 2, 0, 0);
+            rectangle(mat, new Point(x1, y1), new Point(x2, y2), colormap[i.getPredictedClass()], 2, 0, 0);
             //Display label text
-            labeltext = label + " " + String.format("%.2f", obj.getConfidence() * 100) + "%";
+            labeltext = i + " " + String.format("%.2f", i.getConfidence() * 100) + "%";
             int[] baseline = {0};
             Size textSize = getTextSize(labeltext, FONT_HERSHEY_DUPLEX, 1, 1, baseline);
-            rectangle(mat, new Point(x1 + 2, y2 - 2), new Point(x1 + 2 + textSize.get(0), y2 - 2 - textSize.get(1)), colormap[obj.getPredictedClass()], FILLED, 0, 0);
-            putText(mat, labeltext, new Point(x1 + 2, y2 - 2), FONT_HERSHEY_DUPLEX, 1, RGB(0, 0, 0));
+            rectangle(mat, new Point(x1 + 2, y2 - 2), new Point(x1 + 2 + textSize.get(0), y2 - 2 - textSize.get(1)), colormap[i.getPredictedClass()], FILLED, 0, 0);
+            putText(mat, i.toString(), new Point(x1 + 2, y2 - 2), FONT_HERSHEY_DUPLEX, 1, RGB(0, 0, 0));
         }
         return mat;
     }
 }
-
-
