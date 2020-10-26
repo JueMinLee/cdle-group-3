@@ -12,8 +12,8 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <dl4j.version>1.0.0-beta7</dl4j.version>
-        <nd4j.version>1.0.0-beta7</nd4j.version>
+        <dl4j.version>1.0.0-beta6</dl4j.version>
+        <nd4j.version>1.0.0-beta6</nd4j.version>
         <java.version>1.8</java.version>
         <slf4j.version>2.0.0-alpha1</slf4j.version>
         <maven-shade-plugin.version>2.4.3</maven-shade-plugin.version>
@@ -63,6 +63,50 @@
             <artifactId>slf4j-log4j12</artifactId>
             <version>${slf4j.version}</version>
         </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.deeplearning4j/deeplearning4j-gix -->
+        <dependency>
+            <groupId>org.deeplearning4j</groupId>
+            <artifactId>deeplearning4j-vertx</artifactId>
+            <version>1.0.0-beta6</version>
+        </dependency>
+
+<!--        <dependency>-->
+<!--            <groupId>org.deeplearning4j</groupId>-->
+<!--            <artifactId>deeplearning4j-core</artifactId>-->
+<!--            <version>1.0.0-beta3</version>-->
+<!--        </dependency>-->
+
+        <!-- deeplearning4j-ui is used for visualization: see http://deeplearning4j.org/visualization -->
+        <dependency>
+            <groupId>org.deeplearning4j</groupId>
+            <artifactId>deeplearning4j-ui</artifactId>
+            <version>${dl4j.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.deeplearning4j</groupId>
+            <artifactId>deeplearning4j-zoo</artifactId>
+            <version>1.0.0-beta7</version>
+        </dependency>
+
+<!--        &lt;!&ndash; https://mvnrepository.com/artifact/org.deeplearning4j/deeplearning4j-core &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>org.deeplearning4j</groupId>-->
+<!--            <artifactId>deeplearning4j-core</artifactId>-->
+<!--            <version>1.0.0-beta6</version>-->
+<!--        </dependency>-->
+
+<!--        &lt;!&ndash; https://mvnrepository.com/artifact/org.nd4j/nd4j-common &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>org.nd4j</groupId>-->
+<!--            <artifactId>nd4j-common</artifactId>-->
+<!--            <version>1.0.0-beta6</version>-->
+<!--        </dependency>-->
+
+
+
+
     </dependencies>
 
     <build>
