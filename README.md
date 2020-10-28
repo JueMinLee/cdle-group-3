@@ -16,7 +16,7 @@ Sources:
 
 ## Network Description
 
-The Pre-trained Tiny Yolo comprised 9 convolutions layer with 6 max pooling. We fine tune the last output layer to classify our object detection.
+The Pre-trained Tiny Yolo comprised 9 convolutions layer with 6 max pooling. We fine-tuning the output layer for classification.
 
 ## Future Development
 
