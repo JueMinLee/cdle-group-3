@@ -22,6 +22,10 @@ The Pre-trained Tiny Yolo comprised 9 convolutions layer with 6 max pooling. We 
 
 This project plans to train with more drawings categories and achieve higher detection accuracy.
 
+## Video
+
+[Youtube](https://www.youtube.com/watch?v=aY2e23eHQ70)
+
 ## Group Members
 
 | Name                                                      | Email                  |
@@ -29,3 +33,9 @@ This project plans to train with more drawings categories and achieve higher det
 | [Annabelle Ng Xin Min](https://github.com/xin133)         | ngxinmin.n@gmail.com   |
 | [Lee Jue Min](https://github.com/JueMinLee)               | jmlee.works@gmail.com  |
 | [Muhammad Izzuddin Abd Hamid](https://github.com/mizudin) | mizudinhamid@gmail.com |
+
+## Notes
+
+- First time run the program will train the model. Once the trained model is saved, run the program second time to perform object detection.
+- Trained model zip file `DrawingObjectDetection_tinyyolo.zip` will be save inside `generated-models` folder, `deleteme` file can be delete.
+- When the program is running, press <kbd>Esc</kbd> key to exit program, press any key to go through the images.

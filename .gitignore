@@ -20,4 +20,3 @@ node_modules/
 *.mdmp
 .pb
 .png
-generated-models/
